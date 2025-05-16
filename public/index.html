@@ -6,8 +6,26 @@
   <title>Infinite Jumper</title>
 </head>
 <body>
-  <!-- Phaser will inject the canvas here -->
-  <script src="../node_modules/phaser/dist/phaser.min.js"></script>
-  <script src="../src/main.js"></script>
+  <script type="module">
+    // 1) Import Phaser from the CDN ES module build
+    import Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.esm.js';
+
+    // 2) Import your BootScene (now under public/src/scenes/)
+    import BootScene from './src/scenes/BootScene.js';
+
+    // 3) Configure & launch the game
+    const config = {
+      type: Phaser.AUTO,
+      width: 800,
+      height: 600,
+      physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 1000 } },
+      },
+      scene: [BootScene],
+    };
+
+    new Phaser.Game(config);
+  </script>
 </body>
 </html>

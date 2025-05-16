@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+import Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.esm.js';
 import PreloadScene from './PreloadScene.js';
 
 export default class BootScene extends Phaser.Scene {
@@ -6,7 +6,6 @@ export default class BootScene extends Phaser.Scene {
     super('Boot');
   }
   preload() {
-    // immediately go to Preload
     this.scene.start('Preload');
   }
 }
