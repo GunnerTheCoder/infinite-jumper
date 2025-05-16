@@ -9,13 +9,23 @@
   <script type="module">
     import * as Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.esm.js';
     import BootScene from './src/scenes/BootScene.js';
+    import PreloadScene from './src/scenes/PreloadScene.js';
+    import GameScene from './src/scenes/GameScene.js';
 
     const config = {
       type: Phaser.AUTO,
       width: 800,
       height: 600,
-      physics: { default: 'arcade', arcade: { gravity: { y: 1000 } } },
-      scene: [BootScene]
+      backgroundColor: '#4488aa',
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
+      physics: {
+        default: 'arcade',
+        arcade: { gravity: { y: 1000 } }
+      },
+      scene: [BootScene, PreloadScene, GameScene]  // register all scenes here
     };
 
     new Phaser.Game(config);
