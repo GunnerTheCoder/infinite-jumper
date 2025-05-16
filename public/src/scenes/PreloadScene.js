@@ -3,55 +3,81 @@ import TitleScene from './TitleScene.js';
 
 export default class PreloadScene extends Phaser.Scene {
   constructor() { super('Preload'); }
+
   create() {
     const gfx = this.add.graphics();
 
-    // Flat platform (128×32)
-    gfx.fillStyle(0x228b22, 1);
-    gfx.fillRect(0, 0, 128, 32);
-    gfx.lineStyle(4, 0x005500);
-    gfx.strokeRect(0, 0, 128, 32);
-    gfx.generateTexture('platform-flat', 128, 32);
+    // Platform
+    gfx.fillStyle(0x228b22, 1).fillRect(0, 0, 128, 32);
+    gfx.lineStyle(4, 0x005500).strokeRect(0, 0, 128, 32);
+    gfx.generateTexture('platform', 128, 32);
     gfx.clear();
 
-    // Sloped platform (triangle 128×32)
-    gfx.fillStyle(0x228b22, 1);
-    gfx.beginPath();
-    gfx.moveTo(0, 32);
-    gfx.lineTo(128, 0);
-    gfx.lineTo(128, 32);
-    gfx.closePath();
-    gfx.fillPath();
-    gfx.lineStyle(4, 0x005500);
-    gfx.strokeTriangle(0, 32, 128, 0, 128, 32);
-    gfx.generateTexture('platform-slope', 128, 32);
-    gfx.clear();
-
-    // Player (32×32 circle with face)
-    gfx.fillStyle(0xaa0000, 1).fillCircle(16,16,16);
-    gfx.fillStyle(0xffffff,1).fillCircle(11,12,4).fillCircle(21,12,4);
-    gfx.fillStyle(0x000000,1).fillCircle(11,12,2).fillCircle(21,12,2);
+    // Player
+    gfx.fillStyle(0xaa0000, 1).fillCircle(16, 16, 16);
+    gfx.fillStyle(0xffffff, 1).fillCircle(11,12,4).fillCircle(21,12,4);
+    gfx.fillStyle(0x000000, 1).fillCircle(11,12,2).fillCircle(21,12,2);
     gfx.lineStyle(2,0x000000).beginPath()
-       .arc(16,20,8,Phaser.Math.DegToRad(20),Phaser.Math.DegToRad(160)).strokePath();
+       .arc(16,20,8, Phaser.Math.DegToRad(20), Phaser.Math.DegToRad(160)).strokePath();
     gfx.generateTexture('player', 32, 32);
     gfx.clear();
 
-    // Star pickup (24×24)
-    gfx.fillStyle(0xFFFF00,1);
-    const R = 10, Cx=12, Cy=12;
+    // Chaser
+    gfx.fillStyle(0x0000aa, 1).fillCircle(16,16,16);
+    gfx.fillStyle(0xffffff,1).fillCircle(11,12,4).fillCircle(21,12,4);
+    gfx.fillStyle(0x000000,1).fillCircle(11,12,2).fillCircle(21,12,2);
+    gfx.lineStyle(2,0x000000).beginPath()
+       .arc(16,24,6, Phaser.Math.DegToRad(20), Phaser.Math.DegToRad(160), true).strokePath();
+    gfx.generateTexture('chaser', 32, 32);
+    gfx.clear();
+
+    // Boss (cloud with sad face)
+    gfx.fillStyle(0xffffff, 1);
+    gfx.fillEllipse(64,20,100,40);
+    gfx.fillEllipse(50,20,60,30);
+    gfx.fillEllipse(80,20,60,30);
+    gfx.fillStyle(0x000000,1).fillCircle(54,18,4).fillCircle(74,18,4);
+    gfx.lineStyle(2,0x000000).beginPath()
+       .arc(64,28,8, Phaser.Math.DegToRad(200), Phaser.Math.DegToRad(340)).strokePath();
+    gfx.generateTexture('boss', 128, 64);
+    gfx.clear();
+
+    // Spears (Undyne style)
+    // body + triangular tip
+    gfx.fillStyle(0x0000ff, 1);
     gfx.beginPath();
-    for(let i=0;i<5;i++){
-      const a = Phaser.Math.DegToRad( i * 72 );
-      const b = Phaser.Math.DegToRad( i * 72 + 36 );
-      gfx.lineTo(Cx + Math.cos(a)*R, Cy + Math.sin(a)*R);
-      gfx.lineTo(Cx + Math.cos(b)*(R/2), Cy + Math.sin(b)*(R/2));
-    }
+    gfx.moveTo(0, 3);
+    gfx.lineTo(24, 3);
+    gfx.lineTo(24, 0);
+    gfx.lineTo(32, 6);
+    gfx.lineTo(24, 12);
+    gfx.lineTo(24, 9);
+    gfx.lineTo(0, 9);
     gfx.closePath();
     gfx.fillPath();
-    gfx.lineStyle(2,0x000000).strokePath();
-    gfx.generateTexture('star', 24, 24);
-    gfx.destroy();
+    gfx.lineStyle(2, 0x000088);
+    gfx.strokePath();
+    gfx.generateTexture('spear', 32, 12);
+    gfx.clear();
 
+    // UI (checkbox, input, button) — unchanged
+    // ...
+    gfx.fillStyle(0xffffff,1).fillRect(0,0,32,32);
+    gfx.lineStyle(2,0x000000).strokeRect(0,0,32,32);
+    gfx.generateTexture('checkbox-empty',32,32); gfx.clear();
+    gfx.fillStyle(0xffffff,1).fillRect(0,0,32,32);
+    gfx.lineStyle(2,0x000000).strokeRect(0,0,32,32);
+    gfx.lineStyle(4,0x0044cc).beginPath()
+       .moveTo(8,16).lineTo(14,24).lineTo(24,8).strokePath();
+    gfx.generateTexture('checkbox-checked',32,32); gfx.clear();
+    gfx.fillStyle(0xffffff,1).fillRect(0,0,200,40);
+    gfx.lineStyle(4,0x000000).strokeRect(0,0,200,40);
+    gfx.generateTexture('input-box',200,40); gfx.clear();
+    gfx.fillStyle(0x0044cc,1).fillRoundedRect(0,0,200,60,10);
+    gfx.lineStyle(4,0xffffff).strokeRoundedRect(0,0,200,60,10);
+    gfx.generateTexture('play-button',200,60);
+
+    gfx.destroy();
     this.scene.start('Title');
   }
 }
