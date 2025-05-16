@@ -2,14 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Infinite Jumper</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Voidwalker</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas {
+      image-rendering: auto;
+      text-rendering: optimizeLegibility;
+      image-rendering: optimizeQuality;
+    }
+  </style>
 </head>
 <body>
   <script type="module">
     import * as Phaser from 'https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.esm.js';
     import BootScene from './src/scenes/BootScene.js';
     import PreloadScene from './src/scenes/PreloadScene.js';
+    import TitleScene from './src/scenes/TitleScene.js';
     import GameScene from './src/scenes/GameScene.js';
 
     const config = {
@@ -21,11 +30,16 @@
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
       },
+      render: {
+        pixelArt: false,
+        antialias: true,
+        resolution: window.devicePixelRatio
+      },
       physics: {
         default: 'arcade',
-        arcade: { gravity: { y: 1000 } }
+        arcade: { gravity: { y: 1000 }, debug: false }
       },
-      scene: [BootScene, PreloadScene, GameScene]  // register all scenes here
+      scene: [BootScene, PreloadScene, TitleScene, GameScene]
     };
 
     new Phaser.Game(config);
