@@ -14,13 +14,10 @@ export default class GameScene extends Phaser.Scene {
     this.chaser = null;
     this.boss = null;
     this.spears = null;
-    this.diveLine = null;
-    this.bossDiveTimer = null;
-    this.bossScreenX = null;
   }
 
   create() {
-    // UI: seed & hearts
+    // UI
     this.add.text(780,10,`Seed: ${this.seed}`, {
       font:'20px Arial', fill:'#fff',
       stroke:'#000', strokeThickness:3
@@ -41,7 +38,7 @@ export default class GameScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(100,500,'player').setBounce(0.1);
     this.physics.add.collider(this.player,this.platforms);
 
-    // Input & camera follow
+    // Input & camera
     this.cursors = this.input.keyboard.createCursorKeys();
     this.aKey = this.input.keyboard.addKey('A');
     this.dKey = this.input.keyboard.addKey('D');
@@ -56,34 +53,53 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Boss mode
+    // Boss mode: hover + spears
     if (this.mode==='boss') {
-      // Spears group & overlap
+      // create spear group & collision
       this.spears = this.physics.add.group({ allowGravity:false });
       this.physics.add.overlap(this.player,this.spears, (p,s) => {
         s.destroy();
         this.hearts--;
         this.heartsText.text = '❤️'.repeat(this.hearts);
-        if (this.hearts<=0) this.scene.start('Title');
+        if (this.hearts <= 0) this.scene.start('Title');
       });
 
-      // Boss sprite (world-relative at start)
-      this.boss = this.add.image(100,100,'boss')
+      // boss cloud, scaled up
+      this.boss = this.add.image(0,0,'boss')
         .setScale(1.5)
         .setScrollFactor(1);
 
-      // Schedule the first dive
-      this.scheduleBossDive();
+      // spear-throw timer
+      this.time.addEvent({
+        delay: 1500,
+        loop: true,
+        callback: () => {
+          const cam = this.cameras.main;
+          const bx = this.player.x;             // always centered on player X
+          const by = cam.scrollY + 80;          // fixed hover Y
+          this.boss.setPosition(bx, by);
+
+          // spawn spear
+          const spear = this.spears.create(bx, by, 'spear');
+          const angle = Phaser.Math.Angle.Between(bx, by, this.player.x, this.player.y);
+          spear.setRotation(angle);
+          this.physics.velocityFromRotation(angle, 300, spear.body.velocity);
+        }
+      });
     }
   }
 
   update() {
     const SPEED = 200, JUMP_Y = -450;
 
-    // Player movement & hold-to-jump
-    if (this.cursors.left.isDown || this.aKey.isDown) this.player.setVelocityX(-SPEED);
-    else if (this.cursors.right.isDown || this.dKey.isDown) this.player.setVelocityX(SPEED);
-    else this.player.setVelocityX(0);
+    // Player move + hold-to-jump
+    if (this.cursors.left.isDown || this.aKey.isDown) {
+      this.player.setVelocityX(-SPEED);
+    } else if (this.cursors.right.isDown || this.dKey.isDown) {
+      this.player.setVelocityX(SPEED);
+    } else {
+      this.player.setVelocityX(0);
+    }
     if (this.cursors.space.isDown && this.player.body.touching.down) {
       this.player.setVelocityY(JUMP_Y);
     }
@@ -92,24 +108,19 @@ export default class GameScene extends Phaser.Scene {
     if (this.chaser) {
       const dir = this.player.x > this.chaser.x ? 1 : -1;
       this.chaser.setVelocityX(dir * SPEED * 0.8);
-      if (this.chaser.body.touching.down) this.chaser.setVelocityY(JUMP_Y);
-    }
-
-    // Boss follow or fixed
-    if (this.boss) {
-      if (this.bossScreenX == null) {
-        // hover above player until after dive
-        const cam = this.cameras.main;
-        this.boss.x = this.player.x;
-        this.boss.y = cam.scrollY + 80;
-      } else {
-        // stay at fixed screen position
-        this.boss.setScrollFactor(0);
-        this.boss.x = this.cameras.main.scrollX + this.bossScreenX;
+      if (this.chaser.body.touching.down) {
+        this.chaser.setVelocityY(JUMP_Y);
       }
     }
 
-    // Gentle homing for spears
+    // Boss hover (always above player)
+    if (this.boss) {
+      const cam = this.cameras.main;
+      this.boss.x = this.player.x;
+      this.boss.y = cam.scrollY + 80;
+    }
+
+    // gentle homing for spears
     if (this.spears) {
       this.spears.getChildren().forEach(spear => {
         const toPlayer = new Phaser.Math.Vector2(
@@ -120,17 +131,17 @@ export default class GameScene extends Phaser.Scene {
       });
     }
 
-    // Spawn new platforms
+    // spawn platforms ahead
     const camR = this.cameras.main.scrollX + 800;
     if (this.lastX < camR) {
       const newY = Phaser.Math.Clamp(
         this.lastY + Phaser.Math.Between(-100,100),
-        300,550
+        300, 550
       );
       this.spawnPlatform(this.lastX + Phaser.Math.Between(100,220), newY);
     }
 
-    // Void check & teleport 30px above center
+    // void check + teleport 30px above center
     const voidY = this.cameras.main.scrollY + 700;
     if (this.player.y > voidY) {
       this.teleportAboveNearest(this.player, 30);
@@ -150,7 +161,7 @@ export default class GameScene extends Phaser.Scene {
     let best=null, md=Infinity;
     this.platforms.getChildren().forEach(p => {
       const cx = p.x + p.displayWidth/2;
-      const d  = Math.abs(sprite.x - cx);
+      const d = Math.abs(sprite.x - cx);
       if (d < md) { md = d; best = p; }
     });
     if (best) {
@@ -160,59 +171,5 @@ export default class GameScene extends Phaser.Scene {
       );
       if (sprite.body) sprite.setVelocity(0);
     }
-  }
-
-  scheduleBossDive() {
-    // Random delay 10–15 s
-    const delay = Phaser.Math.Between(10000,15000);
-    this.bossDiveTimer = this.time.delayedCall(delay, () => {
-      this.startBossDive();
-    });
-  }
-
-  startBossDive() {
-    // Determine dive X in world coords
-    const diveX = this.player.x;
-    // Draw dotted guide line (world-relative)
-    const cam = this.cameras.main;
-    const startY = cam.scrollY;
-    const endY   = cam.scrollY + cam.height;
-    const lineG = this.add.graphics().setScrollFactor(1).setDepth(10);
-    lineG.lineStyle(2, 0xff0000);
-    for (let y = startY; y < endY; y += 16) {
-      lineG.moveTo(diveX, y);
-      lineG.lineTo(diveX, y + 8);
-    }
-    lineG.strokePath();
-    this.diveLine = lineG;
-
-    // After 2 s, execute dive
-    this.time.delayedCall(2000, () => {
-      // remove guide
-      this.diveLine.destroy();
-
-      // Boss dive: very fast vertical drop
-      // Position boss at diveX, starting from hover height
-      const startY = this.boss.y;
-      this.boss.setScrollFactor(1);
-      this.boss.x = diveX;
-      // send straight down at 1200 px/s
-      this.physics.world.enable(this.boss);
-      this.boss.body.setVelocity(0, 1200);
-      this.boss.body.setAllowGravity(false);
-
-      // Stop dive upon contacting a platform
-      this.physics.add.collider(this.boss, this.platforms, () => {
-        // freeze dive
-        this.boss.body.setVelocity(0);
-        this.boss.body.destroy();
-
-        // fix boss to screen position
-        this.bossScreenX = this.boss.x - cam.scrollX;
-
-        // schedule next dive
-        this.scheduleBossDive();
-      }, null, this);
-    });
   }
 }
